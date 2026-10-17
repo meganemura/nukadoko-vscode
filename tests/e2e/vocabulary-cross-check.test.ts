@@ -1,7 +1,8 @@
 // Responsibility: prove this package's own static resolution
 // (buildStepIndex, the same function src/extension.ts's real workspace file
 // source feeds) names the same vocabulary the CLI's own `nuka steps --json`
-// does, against one real, non-fixture project (examples/todo). Nothing
+// does, against the steps of one real project (nukadoko's examples/todo,
+// copied into tests/e2e/fixtures/todo-workspace). Nothing
 // under src/ imports the CLI -- this file is the one place in this whole
 // package allowed to, since the comparison itself only exists inside a
 // test.
@@ -16,9 +17,8 @@ import { buildStepIndex, type FileSource } from "../../src/index/index.js";
 const execFileAsync = promisify(execFile);
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const repoRoot = path.join(here, "..", "..", "..");
-const cliPath = path.join(repoRoot, "dist", "cli.js");
-const todoDir = path.join(repoRoot, "examples", "todo");
+const cliPath = path.join(here, "..", "..", "node_modules", "nukadoko", "dist", "cli.js");
+const todoDir = path.join(here, "fixtures", "todo-workspace");
 const todoStepsDir = path.join(todoDir, "features", "steps");
 
 interface StepSummary {
@@ -55,7 +55,7 @@ function realFileSource(filePaths: readonly string[]): FileSource {
   };
 }
 
-describe("vocabulary cross-check: examples/todo", () => {
+describe("vocabulary cross-check: the todo example's steps", () => {
   it(
     "the extension's static resolution names the same typed patterns as `nuka steps --json`",
     async () => {
@@ -67,10 +67,10 @@ describe("vocabulary cross-check: examples/todo", () => {
       const cliPatterns = new Set(
         report.steps.filter((step) => step.kind === "typed").flatMap((step) => step.patterns),
       );
-      // examples/todo is chosen precisely because it has no compat steps
-      // (docs/spec.md's own compat door is a separate migration surface) --
-      // asserting that here as a precondition, rather than only filtering
-      // by kind above, means a future fixture change that adds one gets
+      // The todo example is chosen precisely because it has no compat
+      // steps (the compat door is a separate migration surface). Asserting
+      // that here as a precondition, rather than only filtering by kind
+      // above, means a future fixture change that adds one gets
       // caught as a test failure instead of silently narrowing what this
       // test actually compares.
       expect(report.steps.every((step) => step.kind === "typed")).toBe(true);

@@ -1,14 +1,12 @@
 #!/usr/bin/env node
-// Responsibility: put the .wasm files a future phase's tree-sitter parsing
+// Responsibility: put the .wasm files the extension's tree-sitter parsing
 // needs where the bundled extension can find them at runtime.
 //
 // esbuild bundles JavaScript; it does not bundle a WebAssembly binary into
 // that output. web-tree-sitter's own engine and the TypeScript grammar
 // each ship as a separate .wasm file in their npm package, so this script
-// copies them next to the bundled `dist/extension.js` instead. Nothing in
-// `src/extension.ts` loads them yet (that is a later phase's work), but the
-// copy step is wired in now so the later phase only has to add the load
-// call, not also figure out where the files went.
+// copies them next to the bundled `dist/extension.js` instead, where
+// src/extraction/tree-sitter-runtime.ts looks for them.
 //
 // Node standard library only: this script runs as part of `npm run build`,
 // before any dependency the extension bundles is guaranteed usable, so it

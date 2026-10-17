@@ -38,7 +38,7 @@ const execFileAsync = promisify(execFile);
 
 const GHERKIN_LANGUAGE = "gherkin";
 // The extensions `nuka` itself loads a step from (src/discover/discover-
-// steps.ts in the root package). A declaration file shares a matched
+// steps.ts in the nukadoko package). A declaration file shares a matched
 // extension but holds no step, so listFiles drops it after the glob.
 const STEP_FILE_GLOB = "**/*.{ts,mts,js,mjs}";
 const DECLARATION_FILE = /\.d\.m?ts$/;

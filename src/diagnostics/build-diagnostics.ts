@@ -2,9 +2,9 @@
 // list a glue layer can turn into vscode.Diagnostic objects, without
 // importing "vscode" -- same split as src/index and src/extraction, kept
 // runnable under vitest. `CheckIssue`/`CheckReport` are redeclared here
-// (matching src/check/types.ts in this repository's own root package)
-// rather than imported: that module has no entry in the root package's
-// package.json "exports" map, so importing it from here would reach past
+// (matching src/check/types.ts in the nukadoko package) rather than
+// imported: that module has no entry in nukadoko's package.json "exports"
+// map, so importing it from here would reach past
 // the published surface for a shape this file only needs to read as JSON.
 
 interface CheckIssue {

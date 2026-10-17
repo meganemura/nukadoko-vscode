@@ -5,3 +5,5 @@ scripts/**
 tsconfig.json
 node_modules/**
 .npmrc
+.gitignore
+.github/**
