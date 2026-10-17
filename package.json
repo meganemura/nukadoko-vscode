@@ -7,8 +7,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/meganemura/nukadoko.git",
-    "directory": "vscode"
+    "url": "git+https://github.com/meganemura/nukadoko-vscode.git"
   },
   "engines": {
     "vscode": "^1.134.0"
@@ -50,7 +49,7 @@
     "package": "vsce package --no-dependencies"
   },
   "dependencies": {
-    "nukadoko": "file:..",
+    "nukadoko": "0.16.1",
     "web-tree-sitter": "0.26.12",
     "tree-sitter-typescript": "0.23.2"
   },

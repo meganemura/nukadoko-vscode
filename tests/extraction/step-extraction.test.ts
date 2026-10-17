@@ -6,10 +6,10 @@ import { extractStepDeclarations } from "../../src/extraction/step-extraction.js
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const fixturesDir = path.join(here, "..", "fixtures");
-// Reused directly rather than duplicated: proves extraction against a real,
-// shipped typed step file, not just a fixture written to match this
-// extractor's own expectations.
-const addTodoPath = path.resolve(here, "..", "..", "..", "examples", "todo", "features", "steps", "add-todo.ts");
+// A real project's typed step file (nukadoko's examples/todo, copied
+// unchanged), not just a fixture written to match this extractor's own
+// expectations.
+const addTodoPath = path.resolve(here, "..", "e2e", "fixtures", "todo-workspace", "features", "steps", "add-todo.ts");
 
 async function extractFixture(fileName: string) {
   const filePath = path.join(fixturesDir, fileName);
@@ -18,7 +18,7 @@ async function extractFixture(fileName: string) {
 }
 
 describe("extractStepDeclarations: typed steps", () => {
-  it("extracts a single-pattern default-exported defineStep call (examples/todo/features/steps/add-todo.ts)", async () => {
+  it("extracts a single-pattern default-exported defineStep call (the todo example's add-todo.ts)", async () => {
     const sourceText = await readFile(addTodoPath, "utf8");
     const result = await extractStepDeclarations(addTodoPath, sourceText);
 

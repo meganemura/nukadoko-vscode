@@ -16,9 +16,8 @@ import { createVscodeStub, installVscodeModule, requireFreshExtension, type Vsco
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const vscodeRoot = path.join(here, "..", "..");
-const repoRoot = path.join(vscodeRoot, "..");
 const distExtensionPath = path.join(vscodeRoot, "dist", "extension.js");
-const distCliPath = path.join(repoRoot, "dist", "cli.js");
+const distCliPath = path.join(vscodeRoot, "node_modules", "nukadoko", "dist", "cli.js");
 
 const fixtureDir = path.join(here, "fixtures", "diagnostics-workspace");
 const nukaBinPath = path.join(fixtureDir, "node_modules", ".bin", "nuka");
@@ -27,18 +26,16 @@ const noisyFixtureDir = path.join(here, "fixtures", "noisy-check-workspace");
 
 const CHECK_COMMAND = "nukadoko.check";
 
-// A real npm install (`npm install nukadoko`, or scripts/pack-check.mjs's
-// own tarball-install technique) would also produce a working
-// node_modules/.bin/nuka, but at the cost of a real install for every test
-// run. This shim gets the one thing that check actually needs -- a real,
-// spawnable file at the exact relative path src/extension.ts's own
-// resolveNukaBinaryPath computes -- without paying for that install: `node
-// dist/cli.js` behaves identically to the installed `nuka` bin (dist/cli.js
-// is itself npm's own bin entry, unwrapped), and re-execing it here is a
-// close enough stand-in that the CLI's own correctness stays covered by
-// this repository's existing CLI tests rather than re-proven here.
-// POSIX-only (a `#!/bin/sh` shebang script, not `.cmd`) -- this repository's
-// CI runs ubuntu-latest only (.github/workflows/vscode-extension.yml).
+// A real npm install of nukadoko into each fixture would also produce a
+// working node_modules/.bin/nuka, but at the cost of a real install for
+// every test run. This shim gets the one thing that check actually needs (a
+// real, spawnable file at the exact relative path src/extension.ts's own
+// resolveNukaBinaryPath computes) without paying for that install: it
+// re-execs the dist/cli.js of this package's own nukadoko dependency, which
+// is npm's own bin entry for `nuka`, unwrapped. The CLI's own correctness
+// stays covered by nukadoko's tests rather than re-proven here.
+// POSIX-only (a `#!/bin/sh` shebang script, not `.cmd`): CI runs
+// ubuntu-latest only (.github/workflows/ci.yml).
 function writeNukaShim(workspaceDir: string): void {
   const binDir = path.join(workspaceDir, "node_modules", ".bin");
   mkdirSync(binDir, { recursive: true });
@@ -66,7 +63,7 @@ describe("nukadoko.check: the one command allowed to run workspace code", () => 
   afterAll(() => {
     restoreModuleLoad();
     // Ignored by .gitignore's blanket `node_modules/` rule, but a leftover
-    // shim bakes this checkout's own absolute repoRoot path into a file
+    // shim bakes this checkout's own absolute path into a file
     // that would silently point at the wrong tree after the checkout moves
     // -- removed regardless of whether the test above passed or failed.
     rmSync(path.join(fixtureDir, "node_modules"), { recursive: true, force: true });

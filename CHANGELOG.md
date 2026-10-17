@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- The extension has its own repository and depends on the published
+  nukadoko package (0.16.1) instead of the nukadoko checkout it used to
+  live in.
 - Go to definition, completion, and the static-unresolved warning now
   read the same step files `nuka` loads: `.ts`, `.mts`, `.js`, and `.mjs`.
   A `.mts`, `.js`, or `.mjs` step file was not read before. A `.tsx` file
