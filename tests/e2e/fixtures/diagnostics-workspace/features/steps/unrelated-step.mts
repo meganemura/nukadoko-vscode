@@ -8,8 +8,8 @@ import { z } from "zod";
 // feature's step still resolves to nothing -- the undefined-step issue
 // tests/e2e/diagnostics-command.test.ts looks for. .mts for the same reason
 // nukadoko.config.mts (this fixture's sibling) is .mts, not .ts: a plain
-// .ts file here would load as CommonJS (vscode/package.json has no "type":
-// "module") and fail to resolve its own `import ... from "nukadoko"`.
+// .ts file here would load as CommonJS (this extension's package.json has no
+// "type": "module") and fail to resolve its own `import ... from "nukadoko"`.
 export default defineStep({
   pattern: "an unrelated step exists",
   description: "unrelated to the fixture's own undefined step",

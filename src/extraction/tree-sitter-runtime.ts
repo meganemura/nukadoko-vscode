@@ -60,7 +60,7 @@ function resolveWasmPath(fileName: string): string {
   throw new Error(
     `tree-sitter-runtime: could not find "${fileName}". Tried:\n` +
       candidates.map((candidate) => `  - ${candidate}`).join("\n") +
-      `\nRun "npm run build" (vscode/scripts/copy-wasm-assets.mjs copies it into dist/wasm/) first.`,
+      `\nRun "npm run build" (scripts/copy-wasm-assets.mjs copies it into dist/wasm/) first.`,
   );
 }
 

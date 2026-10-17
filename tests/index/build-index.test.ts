@@ -65,8 +65,8 @@ describe("buildStepIndex", () => {
   });
 
   describe("zero execution", () => {
-    // Mixes in the same kind of fixture the extraction-layer phase used to
-    // prove this property one level down (tests/extraction/zero-execution.
+    // Mixes in the same kind of fixture the extraction tests use to prove
+    // this property one level down (tests/extraction/zero-execution.
     // test.ts): tests/fixtures/side-effecting-step.ts writes a marker file
     // the moment it is *evaluated*. buildStepIndex must reach it only
     // through FileSource.readFile (text), never by importing it.
