@@ -1,64 +1,74 @@
-# nukadoko for VSCode
+# nukadoko for VS Code
 
-Syntax highlight for [nukadoko](https://github.com/meganemura/nukadoko), an
-agent-first engine that runs Gherkin with typed step contracts.
+A VS Code extension for [nukadoko](https://github.com/meganemura/nukadoko), an agent-first engine that runs Gherkin with typed step contracts.
+It highlights `.feature` files, jumps from a step line to its declaration, completes step lines, and shows `nuka check` findings as diagnostics.
 
-## What this extension does today
+## What it does
 
-- Highlights `.feature` files: `Feature`/`Background`/`Scenario`/`Scenario
-  Outline`/`Rule`/`Examples`, `Given`/`When`/`Then`/`And`/`But`, `@tags`, `#`
-  comments, `"""`/```` ``` ```` doc strings, `| table |` cells, and
-  `<placeholder>` references.
-- Highlights the `{key:type}` capture syntax nukadoko adds to a step
-  `pattern` string, inside a TypeScript file's string literals.
-- Go to definition: from a step line in a `.feature` file, jumps to the
-  `defineStep`/compat `Given`/`When`/`Then` declaration that step binds to.
-  A step matching more than one declaration offers every match. A pattern
-  this extension cannot resolve statically (built from a variable or a
-  template with a substitution, rather than a literal string) is never
-  guessed at; today that means no jump and no completion entry for it,
-  the same as a step with no declaration at all. The declaration itself
-  still gets a diagnostic, described below, so this case is never silent.
-- Completion: suggests every statically-resolved pattern while typing a step
-  line. Accepting one inserts the step text with a tab stop for each
-  parameter. Each stop starts with a value of the parameter's type (`1`
-  for `{int}`, `"title"` for `{title:string}`), so the line binds before
-  you edit it. A custom parameter type gets its name as a hint instead.
-- Static-unresolved diagnostics: a step declaration with a pattern this
-  extension cannot read without running the file (a variable, a function
-  call, or a template literal with a substitution) gets a warning on its
-  own line. This warning appears once the extension is active, which is
-  when a `.feature` file is opened or the `nukadoko: Check` command runs,
-  and it is refreshed whenever a step file is saved, created, or deleted.
-  It comes from the same static parse as Go to definition and
-  Completion, never from a `nuka` process -- unlike the `nuka check`
-  diagnostics below.
-- Diagnostics: the `nukadoko: Check` command (Command Palette) runs `nuka
-  check --json` in the open workspace and shows its errors and warnings as
-  diagnostics. This is the one command this extension ever runs workspace
-  code for, and only when explicitly invoked -- see "What this extension
-  does not do" below.
+- **Syntax highlight for `.feature` files.**
+  `Feature`, `Background`, `Scenario`, `Scenario Outline`, `Rule`, `Examples`, the `Given`/`When`/`Then`/`And`/`But` keywords, `@tags`, `#` comments, `"""` and ```` ``` ```` doc strings, `| table |` cells, and `<placeholder>` references.
+- **Highlight of the capture syntax.**
+  The `{key:type}` syntax that nukadoko adds to a step `pattern` string is highlighted inside the string literals of a TypeScript file.
+- **Go to definition.**
+  From a step line in a `.feature` file, the extension jumps to the `defineStep` or compat `Given`/`When`/`Then` declaration that the step binds to.
+  A step that matches more than one declaration offers every match.
+- **Completion.**
+  While you type a step line, the extension suggests every pattern it can read statically.
+  An accepted suggestion inserts the step text with one tab stop for each parameter.
+  Each stop starts with a value of the parameter's type (`1` for `{int}`, `"title"` for `{title:string}`), so the line binds before you edit it.
+  A custom parameter type gets its name as a hint instead.
+- **A warning for a pattern it cannot read statically.**
+  A step declaration whose pattern is a variable, a function call, or a template literal with a substitution gets a warning on its own line.
+  The extension never guesses such a pattern, so the step has no jump and no completion entry, and the warning makes that visible.
+  A step file that the extension cannot read or parse gets a warning on its first line, and the other files stay indexed.
+  These warnings appear when the extension activates (a `.feature` file opens, or the `nukadoko: Check` command runs), and they refresh when a step file is saved, created, or deleted.
+- **`nukadoko: Check`.**
+  This command (in the Command Palette) runs `nuka check --json` in the open workspace and shows its errors and warnings as diagnostics.
 
-## What this extension does not do
+The extension reads the same step files that `nuka` loads: `.ts`, `.mts`, `.js`, and `.mjs`, without `.d.ts` and `.d.mts` declaration files.
+It skips `node_modules`, `dist`, `out`, `build`, `coverage`, `.next`, `.git`, and `.nukadoko`.
 
-This extension never runs code from the workspace it is open in on its
-own: opening a file, coloring it, jumping to a definition, offering a
-completion, and showing a static-unresolved diagnostic never import a step
-file or spawn a process. The one exception is the `nukadoko: Check`
-command above, which runs only when a user explicitly triggers it, never
-on open or on save, and only ever runs `nuka` -- the workspace's own
-dependency, found at `node_modules/.bin/nuka` -- never anything else the
-workspace owns.
+## What it never does
 
-Reformatting, an outline view, generating a step from a feature line, a
-step's own callers, running a scenario from the editor, and localisation
-are not in this release.
+The extension does not run code from the workspace on its own.
+Highlighting, Go to definition, completion, and the static warnings read the text of each step file and parse it with tree-sitter.
+They never import a step file and never start a process.
 
-## Status
+The `nukadoko: Check` command is the one exception.
+It runs only when you invoke it, never on open or on save.
+It runs only the workspace's own `node_modules/.bin/nuka`, and nothing else that the workspace owns.
 
-Version 0.1.0. This extension is not yet published to a marketplace. Install
-the `.vsix` produced by `npm run package` in this directory.
+Static matching does not reimplement nukadoko's matching.
+It bundles `resolveStaticPattern` from the `nukadoko/matching` export of the nukadoko version in `package.json`, so a pattern matches here the way it matches in that version of `nuka`.
+
+Reformatting, an outline view, generating a step from a feature line, the callers of a step, running a scenario from the editor, and localization are not in this release.
+
+## Install
+
+The extension is not on a marketplace yet.
+Build a `.vsix` and install it from VS Code (Extensions: Install from VSIX...):
+
+```sh
+npm ci
+npm run package
+```
+
+The `nukadoko: Check` command needs nukadoko installed in the workspace, so that `node_modules/.bin/nuka` exists.
+
+## Development
+
+Node 24 or later.
+
+- `npm run build` type-checks with `tsc`, bundles `src/extension.ts` into `dist/extension.js` with esbuild, and copies the tree-sitter `.wasm` files into `dist/wasm/`.
+- `npm test` runs the Vitest suite. The end-to-end tests under `tests/e2e/` load `dist/extension.js` against a stub of the `vscode` module, so run `npm run build` first.
+- `npm run package` builds and writes the `.vsix` with `vsce`.
+
+`.npmrc` sets `ignore-scripts=true` and `min-release-age=7`: a dependency's install script does not run, and npm resolves no version that is less than a week old.
 
 ## License
 
-MIT. See `LICENSE`.
+MIT. See [LICENSE](LICENSE).
+
+---
+
+[Japanese](README.ja.md)
