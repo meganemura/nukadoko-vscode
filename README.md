@@ -24,6 +24,8 @@ It highlights `.feature` files, jumps from a step line to its declaration, compl
   These warnings appear when the extension activates (a `.feature` file opens, or the `nukadoko: Check` command runs), and they refresh when a step file is saved, created, or deleted.
 - **`nukadoko: Check`.**
   This command (in the Command Palette) runs `nuka check --json` in the open workspace and shows its errors and warnings as diagnostics.
+  A refusal, such as a config that does not load, shows as an error.
+  A note does not show.
 
 The extension reads the same step files that `nuka` loads: `.ts`, `.mts`, `.js`, and `.mjs`, without `.d.ts` and `.d.mts` declaration files.
 It skips `node_modules`, `dist`, `out`, `build`, `coverage`, `.next`, `.git`, and `.nukadoko`.

@@ -25,7 +25,7 @@ export function buildUnresolvedDiagnostics(
   return unresolved.map((declaration) => ({
     file: declaration.declarationFile,
     // declarationPosition.row is 0-indexed (tree-sitter's own convention);
-    // DiagnosticsEntry.line matches CheckIssue.line's 1-indexed convention,
+    // DiagnosticsEntry.line matches CheckFinding.line's 1-indexed convention,
     // which toDiagnostic (extension.ts) already converts back with `- 1`.
     line: declaration.declarationPosition.row + 1,
     message: `This step declaration is statically unresolvable: ${declaration.reason}`,

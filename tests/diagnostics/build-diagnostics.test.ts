@@ -2,10 +2,20 @@ import { describe, expect, it } from "vitest";
 import { readCheckReport } from "../../src/diagnostics/build-diagnostics.js";
 
 describe("readCheckReport", () => {
-  it("flattens errors and warnings, tagging each with its own severity", () => {
+  it("tags each error and warning finding with its own severity, in report order", () => {
     const report = {
-      errors: [{ code: "undefined-step", message: "no step matches", file: "features/todo.feature", line: 3 }],
-      warnings: [{ code: "then-mutates", message: "bound in Then position", file: "features/steps/x.ts", line: 7 }],
+      schema_version: 4,
+      command: "check",
+      findings: [
+        { severity: "error", code: "undefined-step", message: "no step matches", file: "features/todo.feature", line: 3 },
+        {
+          severity: "warning",
+          code: "scenario-without-then",
+          message: "has no Then step",
+          file: "features/todo.feature",
+          line: 2,
+        },
+      ],
     };
 
     const reading = readCheckReport(JSON.stringify(report));
@@ -19,19 +29,33 @@ describe("readCheckReport", () => {
         code: "undefined-step",
       },
       {
-        file: "features/steps/x.ts",
-        line: 7,
-        message: "bound in Then position",
+        file: "features/todo.feature",
+        line: 2,
+        message: "has no Then step",
         severity: "warning",
-        code: "then-mutates",
+        code: "scenario-without-then",
       },
     ]);
   });
 
-  it("keeps an issue that has no file, using an empty string rather than dropping it", () => {
+  it("shows a refusal as an error and leaves a note out", () => {
     const report = {
-      errors: [{ code: "features-dir-missing", message: "featuresDir does not exist" }],
-      warnings: [],
+      findings: [
+        { severity: "refused", code: "config-key-removed", message: "baseURL was removed" },
+        { severity: "note", code: "pattern-unbound", message: "no feature line binds it", file: "features/steps/x.ts" },
+      ],
+    };
+
+    const reading = readCheckReport(JSON.stringify(report));
+
+    expect(reading.kind === "report" && reading.entries).toEqual([
+      { file: "", line: undefined, message: "baseURL was removed", severity: "error", code: "config-key-removed" },
+    ]);
+  });
+
+  it("keeps a finding that has no file, using an empty string rather than dropping it", () => {
+    const report = {
+      findings: [{ severity: "error", code: "features-dir-missing", message: "featuresDir does not exist" }],
     };
 
     const reading = readCheckReport(JSON.stringify(report));
@@ -41,10 +65,9 @@ describe("readCheckReport", () => {
     ]);
   });
 
-  it("keeps an issue that has a file but no line", () => {
+  it("keeps a finding that has a file but no line", () => {
     const report = {
-      errors: [{ code: "feature-parse-error", message: "Parser errors", file: "features/broken.feature" }],
-      warnings: [],
+      findings: [{ severity: "error", code: "feature-parse-error", message: "Parser errors", file: "features/broken.feature" }],
     };
 
     const reading = readCheckReport(JSON.stringify(report));
@@ -61,17 +84,20 @@ describe("readCheckReport", () => {
   });
 
   it("reads a clean report as no entries", () => {
-    const reading = readCheckReport(JSON.stringify({ errors: [], warnings: [] }));
+    const reading = readCheckReport(JSON.stringify({ findings: [] }));
     expect(reading).toEqual({ kind: "report", entries: [] });
   });
 
   it("names the first line of output that is not a report", () => {
-    const reading = readCheckReport('noisy-step loaded\n{\n  "errors": [],\n  "warnings": []\n}\n');
+    const reading = readCheckReport('noisy-step loaded\n{\n  "findings": []\n}\n');
     expect(reading).toEqual({ kind: "unreadable", firstLine: "noisy-step loaded" });
   });
 
-  it("reads JSON without errors and warnings arrays as unreadable", () => {
-    expect(readCheckReport('{"error":"no config"}')).toEqual({ kind: "unreadable", firstLine: '{"error":"no config"}' });
+  it("reads JSON without a findings array as unreadable", () => {
+    expect(readCheckReport('{"errors":[],"warnings":[]}')).toEqual({
+      kind: "unreadable",
+      firstLine: '{"errors":[],"warnings":[]}',
+    });
   });
 
   it("reads output that is empty or only whitespace as empty", () => {

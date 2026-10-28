@@ -1,23 +1,31 @@
 import { defineStep, z } from "nukadoko";
 
+// GET /todos, read in a Then. observe reports each todo's state in the
+// sentence's own words ("done" or "open") instead of the app's `done` flag,
+// because a claim may compare with a literal only when the sentence states
+// it, and "is marked done" states the word, not `true`. The claim then
+// compares that word with the one the line captured, so the record shows
+// both, and a todo the list does not hold breaks the claim instead of
+// passing over nothing.
 export default defineStep({
-  pattern: "the todo titled {title:string} is marked done",
-  description: "Assert the todo with this title has done: true in GET /todos",
-  rationale:
-    "GET /todos in Then position, the same assert-don't-just-answer shape as todo-list-includes: " +
-    "it throws when the todo is absent or not done, because a Then step that always returns ok " +
-    "with no way to fail proves nothing. It checks `done` where todo-list-includes checks presence, " +
-    "so a scenario can state either claim on its own line.",
-  args: z.object({ title: z.string().describe("The title of the todo expected to be done") }),
-  returns: z.object({ done: z.boolean().describe("Always true when the step returns; a false state throws") }),
-  mutates: false,
-  async run({ request }, args) {
+  pattern: "the todo titled {title:string} is marked {state:word}",
+  description: "The todo with this title has the state the line names in GET /todos",
+  args: z.object({
+    title: z.string().describe("The title of the todo to read"),
+    state: z.string().describe('The state the todo is expected to have: "done" or "open"'),
+  }),
+  async observe({ request }) {
     const res = await request.get("/todos");
     const todos = (await res.json()) as Array<{ title?: string; done?: boolean }>;
-    const match = todos.find((todo) => todo.title === args.title);
-    if (!match || match.done !== true) {
-      throw new Error(`todo titled "${args.title}" is not marked done`);
-    }
-    return { done: true };
+    return { todos: todos.map((todo) => ({ title: todo.title ?? "", state: todo.done === true ? "done" : "open" })) };
   },
+  claims: [
+    {
+      actual: "todos",
+      each: {
+        where: [{ actual: "title", compare: "equal", expected: "title" }],
+        claims: [{ actual: "state", compare: "equal", expected: "state" }],
+      },
+    },
+  ],
 });

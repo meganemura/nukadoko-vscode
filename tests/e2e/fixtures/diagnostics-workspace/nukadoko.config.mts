@@ -1,10 +1,12 @@
 import { defineConfig } from "nukadoko";
 
 // Fixture for tests/e2e/diagnostics-command.test.ts: this whole project
-// exists to give `nuka check` exactly one issue to report (its one feature
-// steps on a pattern features/steps/unrelated-step.mts deliberately does not
+// exists to give `nuka check` one error to report (its one feature steps on
+// a pattern features/steps/unrelated-step.mts deliberately does not
 // define), so that test can confirm the nukadoko.check command really
-// spawns `nuka check` and turns its report into a diagnostic.
+// spawns `nuka check` and turns its report into a diagnostic. The scenario
+// has no Then, so the same line also gets the scenario-without-then warning,
+// which shows a warning reaches the editor as one.
 //
 // .mts, not .ts: this fixture lives in this extension's package, whose
 // own package.json has no "type": "module", so a plain .ts file here would

@@ -90,7 +90,7 @@ function resolveNukaBinaryPath(workspaceRoot: string): string {
 }
 
 function toDiagnostic(entry: DiagnosticsEntry): vscode.Diagnostic {
-  // `entry.line` is 1-indexed (CheckIssue.line, unchanged); vscode.Position
+  // `entry.line` is 1-indexed (CheckFinding.line, unchanged); vscode.Position
   // is 0-indexed. An issue with no line (or, via the file-less sentinel
   // below, no file either) still needs *some* range to attach to, so it
   // lands on the first line rather than being dropped.
@@ -102,7 +102,7 @@ function toDiagnostic(entry: DiagnosticsEntry): vscode.Diagnostic {
   return diagnostic;
 }
 
-// `CheckIssue.file` (when present) is rootDir-relative, not absolute --
+// `CheckFinding.file` (when present) is rootDir-relative, not absolute --
 // `nuka check`'s own report reads that way against every fixture this
 // extension was checked against. An issue with no file at all (one about
 // the whole workspace, not one line of it) is attached to the workspace

@@ -3,7 +3,7 @@ import { z } from "zod";
 
 // Present only so `nuka check` finds at least one real step file (an empty
 // vocabulary reports its own "no-step-files-found" error, which would blur
-// this fixture's one intended issue). This step's own pattern is
+// this fixture's one intended error). This step's own pattern is
 // deliberately unrelated to features/todo.feature's step text, so that
 // feature's step still resolves to nothing -- the undefined-step issue
 // tests/e2e/diagnostics-command.test.ts looks for. .mts for the same reason

@@ -2,8 +2,15 @@
 
 ## Unreleased
 
+- `nukadoko: Check` reads the `findings` of `nuka check --json`. Since
+  nukadoko 0.18.0 the report has no `errors` and `warnings` arrays, so
+  the command showed "could not read the output" for every workspace on
+  0.18.0 or later. An `error` or `refused` finding is an error
+  diagnostic, a `warning` finding is a warning, and a `note` does not
+  show. A workspace on nukadoko 0.17 or earlier now gets that message
+  instead.
 - The extension has its own repository and depends on the published
-  nukadoko package (0.16.1) instead of the nukadoko checkout it used to
+  nukadoko package (0.22.0) instead of the nukadoko checkout it used to
   live in.
 - Go to definition, completion, and the static-unresolved warning now
   read the same step files `nuka` loads: `.ts`, `.mts`, `.js`, and `.mjs`.

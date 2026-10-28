@@ -1,13 +1,14 @@
 // Responsibility: turn `nuka check --json`'s own report shape into a flat
 // list a glue layer can turn into vscode.Diagnostic objects, without
 // importing "vscode" -- same split as src/index and src/extraction, kept
-// runnable under vitest. `CheckIssue`/`CheckReport` are redeclared here
-// (matching src/check/types.ts in the nukadoko package) rather than
-// imported: that module has no entry in nukadoko's package.json "exports"
-// map, so importing it from here would reach past
-// the published surface for a shape this file only needs to read as JSON.
+// runnable under vitest. `CheckFinding`/`CheckReport` are redeclared here
+// (matching the --json envelope that nukadoko's docs/spec.md describes)
+// rather than imported: nukadoko's package.json "exports" map has no entry
+// for that type, so importing it from here would reach past the published
+// surface for a shape this file only needs to read as JSON.
 
-interface CheckIssue {
+interface CheckFinding {
+  readonly severity: string;
   readonly code: string;
   readonly message: string;
   readonly file?: string;
@@ -16,32 +17,41 @@ interface CheckIssue {
 }
 
 interface CheckReport {
-  readonly errors: readonly CheckIssue[];
-  readonly warnings: readonly CheckIssue[];
+  readonly findings: readonly CheckFinding[];
 }
 
+// A refusal (a config that does not load, a removed flag) stops the check
+// the way an error does, so it shows as one. A note is advice nuka check
+// itself does not fail on, and `failed` belongs to nuka run; neither has a
+// diagnostic.
+const DIAGNOSTIC_SEVERITY: Readonly<Record<string, "error" | "warning">> = {
+  error: "error",
+  refused: "error",
+  warning: "warning",
+};
+
 export interface DiagnosticsEntry {
-  /** Empty when the source `CheckIssue` had no `file` (an issue about the
+  /** Empty when the source `CheckFinding` had no `file` (an issue about the
    * whole workspace, not one line of it) -- never dropped, so the glue
    * layer still has something to show for it (this module's own boundary:
    * *how* a file-less issue gets displayed is the glue layer's call, not
    * this one's). */
   readonly file: string;
-  /** 1-indexed, straight from `CheckIssue.line` -- never present unless the
-   * source issue named one. */
+  /** 1-indexed, straight from `CheckFinding.line` -- never present unless the
+   * source finding named one. */
   readonly line?: number;
   readonly message: string;
   readonly severity: "error" | "warning";
   readonly code: string;
 }
 
-function toEntry(issue: CheckIssue, severity: "error" | "warning"): DiagnosticsEntry {
+function toEntry(finding: CheckFinding, severity: "error" | "warning"): DiagnosticsEntry {
   return {
-    file: issue.file ?? "",
-    line: issue.line,
-    message: issue.message,
+    file: finding.file ?? "",
+    line: finding.line,
+    message: finding.message,
     severity,
-    code: issue.code,
+    code: finding.code,
   };
 }
 
@@ -56,16 +66,14 @@ export type CheckReportReading =
 
 function isCheckReport(value: unknown): value is CheckReport {
   const report = value as Partial<CheckReport> | null;
-  return (
-    typeof report === "object" && report !== null && Array.isArray(report.errors) && Array.isArray(report.warnings)
-  );
+  return typeof report === "object" && report !== null && Array.isArray(report.findings);
 }
 
 /**
- * Flattens a `nuka check --json` report's `errors`/`warnings` into one list,
- * each entry tagged with the severity its own array already meant. Never
- * filters an issue out for lacking a `file`: a check that silently dropped
- * the one kind of issue it can't point at a line would defeat the purpose
+ * Turns a `nuka check --json` report's `findings` into one list, each entry
+ * tagged with the diagnostic severity its own `severity` maps to. Never
+ * filters a finding out for lacking a `file`: a check that silently dropped
+ * the one kind of finding it can't point at a line would defeat the purpose
  * of running it at all.
  */
 export function readCheckReport(stdout: string): CheckReportReading {
@@ -83,11 +91,11 @@ export function readCheckReport(stdout: string): CheckReportReading {
     return { kind: "unreadable", firstLine: firstLine.trim() };
   }
   const entries: DiagnosticsEntry[] = [];
-  for (const issue of report.errors) {
-    entries.push(toEntry(issue, "error"));
-  }
-  for (const issue of report.warnings) {
-    entries.push(toEntry(issue, "warning"));
+  for (const finding of report.findings) {
+    const severity = DIAGNOSTIC_SEVERITY[finding.severity];
+    if (severity !== undefined) {
+      entries.push(toEntry(finding, severity));
+    }
   }
   return { kind: "report", entries };
 }
